@@ -14,13 +14,20 @@ from PyMca5.PyMcaPhysics.xrf import ConcentrationsTool
 # dataDir = PyMcaDataDir.PYMCA_DATA_DIR
 # spe = os.path.join(dataDir, "Steel.mca")
 # cfg = os.path.join(dataDir, "Steel.cfg")
-spe = "sample-data/Manganese.mca"
+spe = "sample-data/Nickel.mca"
 cfg = "cfg/stainless-v0.7.cfg"
 # self.assertTrue(os.path.isfile(spe),
 #                 "File %s is not an actual file" % spe)
 
 sf = specfile.Specfile(spe)
-print(sf)
+
+# TEMP ##################################################
+# This code can read off the calibration parameters
+print(len(sf))
+calib= sf.scandata[0].header("@CALIB")
+print(calib)
+# TEMP ##################################################
+
 # y = mcaData = sf[1].mca(1)
 y = mcaData = sf[0].mca(1)
 sf = None
@@ -32,11 +39,49 @@ configuration.read(cfg)
 mcaFit = ClassMcaTheory.ClassMcaTheory()
 configuration=mcaFit.configure(configuration)
 x = numpy.arange(y.size).astype(numpy.float64)
-mcaFit.setData(x, y,
+
+
+# TEMP ##################################################
+
+# if self.calibration == 'None':
+#     calib = [0.0, 1.0, 0.0]
+# else:
+#     calib = curveinfo.get('McaCalib', [0.0, 1.0, 0.0])
+
+# self.__simplefitcalibration = calib
+
+# calib = [-0.081195586, 0.0264471, 0]
+# TODO: see if this actually does anything
+calib = [100, 0, -1]
+# calibrationOrder = curveinfo.get('McaCalibOrder', 2)
+# if calibrationOrder == 'TOF':
+print(x)
+print(y)
+# x = calib[2] + calib[0] / pow(x - calib[1], 2)
+# x - calib[1]
+# else:
+# print(x.shape)
+# x = calib[0] + calib[1] * x + calib[2] * x * x
+# print(x.shape)
+# print(calib[1] * x + calib[2] * x * x)
+# TEMP ##################################################
+# print(configuration["fit"])
+mcaFit.setData(x,y,
                xmin=configuration["fit"]["xmin"],
-               xmax=configuration["fit"]["xmax"])
+               xmax=configuration["fit"]["xmax"],
+               calibration=calib)
+
+# TODO: This seems to do the trick - we need to find a way to get these from the config though
+mcaFit.config['detector']['zero'] = -0.081195586
+mcaFit.config['detector']['gain'] = 0.026645403
+
+# print(mcaFit.getConfiguration())
+# mcaFit.setConfiguration(configuration)
+# mcaFit.configure()
 mcaFit.estimate()
+# print(configuration['detector']['gain'])
 fitResult, result = mcaFit.startFit(digest=1)
+# print(result)
 
 # fit is already done, calculate the concentrations
 concentrationsConfiguration = configuration["concentrations"]
@@ -44,7 +89,7 @@ cTool = ConcentrationsTool.ConcentrationsTool()
 cToolConfiguration = cTool.configure()
 cToolConfiguration.update(configuration['concentrations'])
 
-print(configuration['concentrations'])
+# print(configuration['concentrations'])
 
 concentrationsResult, addInfo = cTool.processFitResult( \
             config=cToolConfiguration,
@@ -55,6 +100,85 @@ concentrationsResult, addInfo = cTool.processFitResult( \
 
 # print(concentrationsResult.keys())
 print(concentrationsResult['mass fraction'])
+
+
+
+
+
+
+
+#
+# fitreference = False
+# if configuration['concentrations']['usematrix']:
+#     # _logger.debug("USING MATRIX")
+#     if configuration['concentrations']['reference'].upper() == "AUTO":
+#         fitreference = True
+# # elif autotime:
+# #     # we have to calculate with the time in the configuration
+# #     # and correct later on
+# #     cToolConfiguration["autotime"] = 0
+#
+# fitresult = {}
+# if fitreference:
+#     # we have to fit the "reference" spectrum just to get the reference element
+#     mcafitresult = mcaFit.startfit(digest=0, linear=True)
+#     # if one of the elements has zero area this cannot be made directly
+#     fitresult['result'] = mcaFit.imagingDigestResult()
+#     fitresult['result']['config'] = configuration
+#     concentrationsResult, addInfo = cTool.processFitResult(config=cToolConfiguration,
+#                                         fitresult=fitresult,
+#                                         elementsfrommatrix=False,
+#                                         fluorates=mcaFit._fluoRates,
+#                                         addinfo=True)
+#     # and we have to make sure that all the areas are positive
+#     for group in fitresult['result']['groups']:
+#         if fitresult['result'][group]['fitarea'] <= 0.0:
+#             # give a tiny area
+#             fitresult['result'][group]['fitarea'] = 1.0e-6
+#     config['concentrations']['reference'] = addInfo['ReferenceElement']
+# else:
+#     fitresult['result'] = {}
+#     fitresult['result']['config'] = configuration
+#     fitresult['result']['groups'] = []
+#     idx = 0
+#     for iParam, param in enumerate(mcaFit.PARAMETERS):
+#         # if mcaFit.codes[0][iParam] == Gefit.CFIXED:
+#         #     continue
+#         if iParam < mcaFit.NGLOBAL:
+#             # background
+#             pass
+#         else:
+#             fitresult['result']['groups'].append(param)
+#             fitresult['result'][param] = {}
+#             # we are just interested on the factor to be applied to the area to get the
+#             # concentrations
+#             fitresult['result'][param]['fitarea'] = 1.0
+#             fitresult['result'][param]['sigmaarea'] = 1.0
+#         idx += 1
+# concentrationsResult, addInfo = cTool.processFitResult(config=cToolConfiguration,
+#                                         fitresult=fitresult,
+#                                         elementsfrommatrix=False,
+#                                         fluorates=mcaFit._fluoRates,
+#                                         addinfo=True)
+#
+# print(concentrationsResult['mass fraction'])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # cToolConfiguration['usematrix'] = 0
 # cToolConfiguration['flux'] = addInfo["Flux"]
 # cToolConfiguration['time'] = addInfo["Time"]
