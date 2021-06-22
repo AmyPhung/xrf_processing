@@ -1,5 +1,130 @@
+import os
+import sys
+import numpy
+from PyMca5.PyMcaIO import specfilewrapper as specfile
+from PyMca5.PyMcaIO import ConfigDict
+from PyMca5.PyMcaPhysics.xrf import ClassMcaTheory
+from PyMca5.PyMcaPhysics.xrf import ConcentrationsTool
+
+# if sys.version_info < (3,):
+#     from StringIO import StringIO
+# else:
+#     from io import StringIO
+
+# dataDir = PyMcaDataDir.PYMCA_DATA_DIR
+# spe = os.path.join(dataDir, "Steel.mca")
+# cfg = os.path.join(dataDir, "Steel.cfg")
+spe = "sample-data/Manganese.mca"
+cfg = "cfg/stainless-v0.7.cfg"
+# self.assertTrue(os.path.isfile(spe),
+#                 "File %s is not an actual file" % spe)
+
+sf = specfile.Specfile(spe)
+print(sf)
+# y = mcaData = sf[1].mca(1)
+y = mcaData = sf[0].mca(1)
+sf = None
+
+# perform the actual XRF analysis
+configuration = ConfigDict.ConfigDict()
+# configuration.readfp(StringIO(cfg))
+configuration.read(cfg)
+mcaFit = ClassMcaTheory.ClassMcaTheory()
+configuration=mcaFit.configure(configuration)
+x = numpy.arange(y.size).astype(numpy.float64)
+mcaFit.setData(x, y,
+               xmin=configuration["fit"]["xmin"],
+               xmax=configuration["fit"]["xmax"])
+mcaFit.estimate()
+fitResult, result = mcaFit.startFit(digest=1)
+
+# fit is already done, calculate the concentrations
+concentrationsConfiguration = configuration["concentrations"]
+cTool = ConcentrationsTool.ConcentrationsTool()
+cToolConfiguration = cTool.configure()
+cToolConfiguration.update(configuration['concentrations'])
+
+print(configuration['concentrations'])
+
+concentrationsResult, addInfo = cTool.processFitResult( \
+            config=cToolConfiguration,
+            fitresult={"result":result},
+            elementsfrommatrix=False,
+            fluorates = mcaFit._fluoRates,
+            addinfo=True)
+
+# print(concentrationsResult.keys())
+print(concentrationsResult['mass fraction'])
+# cToolConfiguration['usematrix'] = 0
+# cToolConfiguration['flux'] = addInfo["Flux"]
+# cToolConfiguration['time'] = addInfo["Time"]
+# cToolConfiguration['area'] = addInfo["DetectorArea"]
+# cToolConfiguration['distance'] = addInfo["DetectorDistance"]
+# concentrationsResult2, addInfo = cTool.processFitResult( \
+#             config=cToolConfiguration,
+#             fitresult={"result":result},
+#             elementsfrommatrix=False,
+#             fluorates = mcaFit._fluoRates,
+#             addinfo=True)
+# referenceElement = addInfo['ReferenceElement']
+# referenceTransitions = addInfo['ReferenceTransitions']
+# # make sure we are using Co as internal standard
+# cToolConfiguration["usematrix"] = 1
+# cToolConfiguration["reference"] = "Co"
+# concentrationsResult, addInfo = cTool.processFitResult( \
+#             config=cToolConfiguration,
+#             fitresult={"result":result},
+#             elementsfrommatrix=False,
+#             fluorates = mcaFit._fluoRates,
+#             addinfo=True)
+# referenceElement = addInfo['ReferenceElement']
+# referenceTransitions = addInfo['ReferenceTransitions']
+# self.assertTrue(referenceElement == "Co",
+#        "referenceElement is <%s> instead of <Co>" % referenceElement)
+# cobalt = concentrationsResult["mass fraction"]["Co K"]
+# self.assertTrue( abs(cobalt-0.0005) < 1.0E-7,
+#                 "Wrong Co concentration %f expected 0.0005" % cobalt)
+#
+# # we should get the same result with internal parameters
+# cTool = ConcentrationsTool.ConcentrationsTool()
+# cToolConfiguration = cTool.configure()
+# cToolConfiguration.update(configuration['concentrations'])
+#
+# # make sure we are not using an internal standard
+# cToolConfiguration['usematrix'] = 0
+# cToolConfiguration['flux'] = addInfo["Flux"]
+# cToolConfiguration['time'] = addInfo["Time"]
+# cToolConfiguration['area'] = addInfo["DetectorArea"]
+# cToolConfiguration['distance'] = addInfo["DetectorDistance"]
+# concentrationsResult2, addInfo = cTool.processFitResult( \
+#             config=cToolConfiguration,
+#             fitresult={"result":result},
+#             elementsfrommatrix=False,
+#             fluorates = mcaFit._fluoRates,
+#             addinfo=True)
+# referenceElement = addInfo['ReferenceElement']
+# referenceTransitions = addInfo['ReferenceTransitions']
+# self.assertTrue(referenceElement in ["None", "", None],
+#        "referenceElement is <%s> instead of <None>" % referenceElement)
+#
+# for key in concentrationsResult["mass fraction"]:
+#     internal = concentrationsResult["mass fraction"][key]
+#     fp = concentrationsResult2["mass fraction"][key]
+#     delta = 100 * (abs(internal - fp) / internal)
+#     self.assertTrue( delta < 1.0e-5,
+#         "Error for <%s> concentration %g != %g" % (key, internal, fp))
+
+
+
+
+
+#
 # import os
 # import numpy
+# import h5py
+#
+# # use a dummy 3D array generated using data supplied with PyMca
+# from PyMca5 import PyMcaDataDir
 # from PyMca5.PyMcaIO import specfilewrapper as specfile
 # from PyMca5.PyMcaIO import ConfigDict
 #
@@ -8,77 +133,57 @@
 # # cfg = os.path.join(dataDir, "Steel.cfg")
 # spe = "sample-data/Nickel.mca"
 # cfg = "cfg/stainless-v0.7.cfg"
-#
+# sf = specfile.Specfile(spe)
+# y = counts = sf[0].mca(1)
+# x = channels = numpy.arange(y.size).astype(numpy.float)
 # configuration = ConfigDict.ConfigDict()
 # configuration.read(cfg)
+# calibration = configuration["detector"]["zero"], \
+#               configuration["detector"]["gain"], 0.0
+# initialTime = configuration["concentrations"]["time"]
 #
-# print(configuration)
-
-import os
-import numpy
-import h5py
-
-# use a dummy 3D array generated using data supplied with PyMca
-from PyMca5 import PyMcaDataDir
-from PyMca5.PyMcaIO import specfilewrapper as specfile
-from PyMca5.PyMcaIO import ConfigDict
-
-# dataDir = PyMcaDataDir.PYMCA_DATA_DIR
-# spe = os.path.join(dataDir, "Steel.mca")
-# cfg = os.path.join(dataDir, "Steel.cfg")
-spe = "sample-data/Nickel.mca"
-cfg = "cfg/stainless-v0.7.cfg"
-sf = specfile.Specfile(spe)
-y = counts = sf[0].mca(1)
-x = channels = numpy.arange(y.size).astype(numpy.float)
-configuration = ConfigDict.ConfigDict()
-configuration.read(cfg)
-calibration = configuration["detector"]["zero"], \
-              configuration["detector"]["gain"], 0.0
-initialTime = configuration["concentrations"]["time"]
-
-# create the data
-nRows = 5
-nColumns = 10
-nTimes = 3
-data = numpy.zeros((nRows, nColumns, counts.size), dtype = numpy.float)
-live_time = numpy.zeros((nRows * nColumns), dtype=numpy.float)
-
-mcaIndex = 0
-for i in range(nRows):
-    for j in range(nColumns):
-        factor = (1 + mcaIndex % nTimes)
-        data[i, j] = counts * factor
-        live_time[i * nColumns + j] = initialTime * factor
-        mcaIndex += 1
-
-
-h5File = "Nickel.h5"
-if os.path.exists(h5File):
-    os.remove(h5File)
-h5 = h5py.File(h5File, "w")
-h5["/entry/instrument/detector/calibration"] = calibration
-h5["/entry/instrument/detector/channels"] = channels
-h5["/entry/instrument/detector/data"] = data
-h5["/entry/instrument/detector/live_time"] = live_time
-
-# add nexus conventions (not needed)
-h5["/entry/title"] = u"Dummy generated map"
-h5["/entry"].attrs["NX_class"] = u"NXentry"
-h5["/entry/instrument"].attrs["NX_class"] = u"NXinstrument"
-h5["/entry/instrument/detector/"].attrs["NX_class"] = u"NXdetector"
-h5["/entry/instrument/detector/data"].attrs["interpretation"] = \
-                                                      u"spectrum"
-# implement a default plot named measurement (not needed)
-h5["/entry/measurement/data"] = \
-                    h5py.SoftLink("/entry/instrument/detector/data")
-h5["/entry/measurement"].attrs["NX_class"] = u"NXdata"
-h5["/entry/measurement"].attrs["signal"] = u"data"
-h5["/entry"].attrs["default"] = u"measurement"
-
-h5.flush()
-h5.close()
-h5 = None
+# # create the data
+# nRows = 5
+# nColumns = 10
+# nTimes = 3
+# data = numpy.zeros((nRows, nColumns, counts.size), dtype = numpy.float)
+# live_time = numpy.zeros((nRows * nColumns), dtype=numpy.float)
+#
+# mcaIndex = 0
+# for i in range(nRows):
+#     for j in range(nColumns):
+#         factor = (1 + mcaIndex % nTimes)
+#         data[i, j] = counts * factor
+#         live_time[i * nColumns + j] = initialTime * factor
+#         mcaIndex += 1
+#
+#
+# h5File = "Nickel.h5"
+# if os.path.exists(h5File):
+#     os.remove(h5File)
+# h5 = h5py.File(h5File, "w")
+# h5["/entry/instrument/detector/calibration"] = calibration
+# h5["/entry/instrument/detector/channels"] = channels
+# h5["/entry/instrument/detector/data"] = data
+# h5["/entry/instrument/detector/live_time"] = live_time
+#
+# # add nexus conventions (not needed)
+# h5["/entry/title"] = u"Dummy generated map"
+# h5["/entry"].attrs["NX_class"] = u"NXentry"
+# h5["/entry/instrument"].attrs["NX_class"] = u"NXinstrument"
+# h5["/entry/instrument/detector/"].attrs["NX_class"] = u"NXdetector"
+# h5["/entry/instrument/detector/data"].attrs["interpretation"] = \
+#                                                       u"spectrum"
+# # implement a default plot named measurement (not needed)
+# h5["/entry/measurement/data"] = \
+#                     h5py.SoftLink("/entry/instrument/detector/data")
+# h5["/entry/measurement"].attrs["NX_class"] = u"NXdata"
+# h5["/entry/measurement"].attrs["signal"] = u"data"
+# h5["/entry"].attrs["default"] = u"measurement"
+#
+# h5.flush()
+# h5.close()
+# h5 = None
 # #
 # # from PyMca5.PyMcaPhysics.xrf.FastXRFLinearFit import FastXRFLinearFit
 # #
