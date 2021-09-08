@@ -1,0 +1,51 @@
+
+[Stainless 316_|_mca 1_|_1_|_1_|_1 Fit]
+order = 1
+A = 0.8675987806773701
+B = 0.016609431846314845
+C = 0.0
+
+
+[SS316_no_window_30sec_accum_|_mca 1_|_1_|_1_|_1 Fit]
+order = 1
+A = -0.02534957641319193
+B = 0.009622562267904507
+C = 0.0
+
+[SS316_no_window_30sec_accum_|_mca 1_|_1_|_1_|_1 (PyMca)]
+A = 0.7836194856170139
+B = 0.01680663748233429
+C = 0.0
+order = 1
+
+[SS316_no_window_30sec_accum_|_mca 1_|_1_|_1_|_1 Fit (Source)]
+A = 0.7836194856170139
+B = 0.01680663748233429
+C = 0.0
+order = 1
+
+[SS316_no_window_30sec_accum_|_mca 1_|_1_|_1_|_1 Bkg (Source)]
+A = 0.7836194856170139
+B = 0.01680663748233429
+C = 0.0
+order = 1
+
+[SS316_no_window_30sec_accum_|_mca 1_|_1_|_1_|_1]
+A = -0.12836368
+B = 0.0097721683
+C = 0.0
+order = 1
+
+# Use this one
+[pewter_w_window_|_mca 1_|_1_|_1_|_1 Fit]
+order = 1
+A = 0.016889767562825696
+B = 0.009548207577735779
+C = 0.0
+
+# Use this one
+[1977penny_no_window_30sec_accum_|_mca 1_|_1_|_1_|_1 Fit]
+order = 1
+A = -0.002045248228470392
+B = 0.009604175557195421
+C = 0.0

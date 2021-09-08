@@ -26,6 +26,8 @@ sf = specfile.Specfile(spe)
 print(len(sf))
 calib= sf.scandata[0].header("@CALIB")
 print(calib)
+
+# NOTE: we can also load a different calib file separately - in pymca, we can save this separately
 # TEMP ##################################################
 
 # y = mcaData = sf[1].mca(1)
@@ -40,7 +42,7 @@ mcaFit = ClassMcaTheory.ClassMcaTheory()
 configuration=mcaFit.configure(configuration)
 x = numpy.arange(y.size).astype(numpy.float64)
 
-
+# print(mcaFit)
 # TEMP ##################################################
 
 # if self.calibration == 'None':
@@ -52,7 +54,7 @@ x = numpy.arange(y.size).astype(numpy.float64)
 
 # calib = [-0.081195586, 0.0264471, 0]
 # TODO: see if this actually does anything
-calib = [100, 0, -1]
+# calib = [100, 0, -1]
 # calibrationOrder = curveinfo.get('McaCalibOrder', 2)
 # if calibrationOrder == 'TOF':
 print(x)
@@ -72,8 +74,8 @@ mcaFit.setData(x,y,
                calibration=calib)
 
 # TODO: This seems to do the trick - we need to find a way to get these from the config though
-mcaFit.config['detector']['zero'] = -0.081195586
-mcaFit.config['detector']['gain'] = 0.026645403
+# mcaFit.config['detector']['zero'] = -0.081195586
+# mcaFit.config['detector']['gain'] = 0.026645403
 
 # print(mcaFit.getConfiguration())
 # mcaFit.setConfiguration(configuration)
