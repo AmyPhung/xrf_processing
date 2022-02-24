@@ -15,8 +15,6 @@ class XRFWindow():
         # Set window title
         self.window.title('XRF Data Connection')
 
-
-
         # Set window background color
         # self.window.config(background = "white")
 
